@@ -1,6 +1,6 @@
 # 🤖 Jarvis: 24/7 Autonomous Multimodal AI Assistant on WhatsApp
 
-Jarvis is a production-grade, 24/7 personal AI agent deployed on WhatsApp via the **Meta WhatsApp Cloud API**. Engineered to run continuously on an **AWS EC2 `t3.small`** instance within strict zero-cost / credit-budget boundaries, Jarvis combines multimodal processing (Voice, Vision, Documents), an autonomous **ReAct reasoning loop (Hermes)**, an isolated **Model Context Protocol (MCP)** server, and a **Qdrant Embedded Vector RAG** memory store.
+Jarvis is a production-grade, 24/7 personal AI agent deployed on WhatsApp via the **Meta WhatsApp Cloud API**. Engineered to run continuously on an **AWS EC2 `t3.small`** instance within strict zero-cost / credit-budget boundaries, Jarvis combines multimodal processing (Voice, Vision, Documents), an autonomous **ReAct reasoning loop**, an isolated **Model Context Protocol (MCP)** server, and a **Qdrant Embedded Vector RAG** memory store.
 
 ---
 
