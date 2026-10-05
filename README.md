@@ -4,7 +4,7 @@ Jarvis is a production-grade, 24/7 personal AI agent deployed on WhatsApp via th
 
 ---
 
-## 🌟 Key Capabilities
+## Capabilities
 
 -  **Voice Processing**: High-fidelity speech transcription via Groq **Whisper-large-v3** with automatic translation from Malayalam, Hindi, and regional languages to English.
 - **Computer Vision**: Dual-engine image analysis (Google Gemini 3.6 Flash + AWS Bedrock Claude 3.5 Sonnet / Nova Lite) for instant OCR, document transcription, and scene understanding.
