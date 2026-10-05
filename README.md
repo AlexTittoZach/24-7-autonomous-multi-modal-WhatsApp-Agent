@@ -167,11 +167,12 @@ sudo systemctl enable whatsapp-agent.service
 sudo systemctl start whatsapp-agent.service
 ```
 
----
-
-## Security & Privacy
+##  Security & Privacy
 
 - **Guardrails**: Persona protection blocks prompt injections, prevents disclosing backend schemas, and enforces strict system prompt isolation.
 
 ---
+
+## 📄 License
+This project is licensed under the [Apache 2.0 License](LICENSE).
 
