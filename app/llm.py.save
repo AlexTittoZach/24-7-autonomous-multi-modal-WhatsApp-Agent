@@ -1,0 +1,121 @@
+import os
+import re
+import asyncio
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Configuration
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "groq").lower()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
+
+BEDROCK_REGION = os.getenv("BEDROCK_REGION", "ap-south-1")
+BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-5-sonnet-20241022-v2:0")
+
+DEFAULT_SYSTEM_PROMPT = """You are Jarvis, a highly capable, intelligent, and friendly personal AI assistant on WhatsApp.
+
+Guidelines:
+1. Keep answers concise, direct, and conversational (avoid overly long walls of text).
+2. If speaking in Malayalam, English, or any language the user prefers, match their language naturally.
+3. Be polite, engaging, and smart.
+"""
+
+
+def format_for_whatsapp(text: str) -> str:
+    """
+    Converts standard Markdown formatting into valid WhatsApp styling:
+    - **bold** -> *bold*
+    - ### Headers -> *Headers*
+    - Cleans up trailing bold punctuation artifacts like **! -> *!
+    """
+    if not text:
+        return text
+
+    # 1. Convert Markdown headers (e.g. ### Header or ## Header) to *Header*
+    text = re.sub(r'^[ \t]*#{1,6}\s*(.+?)$', r'*\1*', text, flags=re.MULTILINE)
+
+    # 2. Convert triple asterisks (bold + italic in markdown) to *text*
+    text = re.sub(r'\*\*\*(.+?)\*\*\*', r'*\1*', text)
+
+    # 3. Convert standard markdown bold (**text**) to WhatsApp bold (*text*)
+    text = re.sub(r'\*\*(.+?)\*\*', r'*\1*', text)
+
+    return text.strip()
+
+
+async def call_groq(messages: list, system_prompt: str = DEFAULT_SYSTEM_PROMPT) -> str:
+    """Invokes Groq API using fast serverless models."""
+    from groq import AsyncGroq
+
+    if not GROQ_API_KEY:
+        return "❌ Error: GROQ_API_KEY is not set in .env"
+
+    client = AsyncGroq(api_key=GROQ_API_KEY)
+    
+    formatted_messages = [{"role": "system", "content": system_prompt}]
+    for msg in messages:
+        formatted_messages.append({
+            "role": msg.get("role", "user"),
+            "content": msg.get("content", "")
+        })
+
+    try:
+        response = await client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=formatted_messages,
+            temperature=0.7,
+            max_tokens=1024,
+        )
+        raw_output = response.choices[0].message.content
+        return format_for_whatsapp(raw_output)
+    except Exception as e:
+        print(f"❌ Groq API Error: {e}", flush=True)
+        return f"⚠️ Sorry, I encountered an error with the AI engine: {e}"
+
+
+async def call_bedrock(messages: list, system_prompt: str = DEFAULT_SYSTEM_PROMPT) -> str:
+    """Invokes AWS Bedrock Converse API via boto3."""
+    import boto3
+
+    try:
+        client = boto3.client("bedrock-runtime", region_name=BEDROCK_REGION)
+        
+        bedrock_messages = []
+        for msg in messages:
+            bedrock_messages.append({
+                "role": msg.get("role", "user"),
+                "content": [{"text": msg.get("content", "")}]
+            })
+
+        loop = asyncio.get_running_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: client.converse(
+                modelId=BEDROCK_MODEL_ID,
+                messages=bedrock_messages,
+                system=[{"text": system_prompt}],
+                inferenceConfig={"maxTokens": 1024, "temperature": 0.7}
+            )
+        )
+        raw_output = response["output"]["message"]["content"][0]["text"]
+        return format_for_whatsapp(raw_output)
+    except Exception as e:
+        print(f"❌ Bedrock API Error: {e}", flush=True)
+        return f"⚠️ Sorry, Bedrock AI error: {e}"
+
+
+async def generate_ai_reply(user_text: str, conversation_history: list = None, system_prompt: str = DEFAULT_SYSTEM_PROMPT) -> str:
+    """
+    Universal entry point for generating AI responses.
+    Routes to Groq or Bedrock based on LLM_PROVIDER in .env.
+    """
+    messages = list(conversation_history) if conversation_history else []
+    messages.append({"role": "user", "content": user_text})
+
+    if LLM_PROVIDER == "bedrock":
+        print(f"🧠 Routing to AWS Bedrock ({BEDROCK_MODEL_ID})...", flush=True)
+        return await call_bedrock(messages, system_prompt)
+    else:
+        print(f"⚡ Routing to Groq ({GROQ_MODEL})...", flush=True)
+        return await call_groq(messages, system_prompt)

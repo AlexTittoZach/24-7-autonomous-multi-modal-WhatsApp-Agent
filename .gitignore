@@ -1,0 +1,39 @@
+# Environment & Secrets (NEVER COMMIT)
+.env
+.env.*
+!.env.example
+
+# Python Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Databases, Vector Indexes & Personal Data (CRITICAL PRIVACY)
+data/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+qdrant_db/
+.lock
+
+# Logs and Runtime Files
+*.log
+*.pid
+
+# OS and Editor Specific Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
